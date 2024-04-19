@@ -1,0 +1,6 @@
+contracts/node_modules
+contracts/.env
+ui/node_modules
+ui/.env
+.env
+
