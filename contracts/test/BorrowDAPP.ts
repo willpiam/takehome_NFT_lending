@@ -1,11 +1,12 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { ethers } from "hardhat";
+import { setCode, mineUpTo } from "@nomicfoundation/hardhat-network-helpers";
 
-describe("Meaningless Counter", () => {
+describe("BorrowDAPP", () => {
     it("increment counter", async () => {
         const BorrowDAPP = await hre.ethers.getContractFactory("BorrowDAPP");
-        const borrowDAPP = await BorrowDAPP.deploy();
+        const borrowDAPP = await BorrowDAPP.deploy(ethers.ZeroAddress, ethers.ZeroAddress);
 
         const dappAddress = await borrowDAPP.getAddress();
         expect(ethers.isAddress(dappAddress)).to.equal(true);
