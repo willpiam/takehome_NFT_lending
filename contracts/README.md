@@ -25,6 +25,8 @@ You may need to delete ignition/deployments/chain-<something>
 
 ## Run only relevent tests
 
+--grep "string to match with test"
+
 ## scripts
 
 ### one.ts

@@ -130,7 +130,7 @@
     "_messageHash": "0xaafe739dca4131f8d8769620d0efb2326efc0cef4c40f8e6ab3d686bf5cbdb50",
     "direction": "L1 -> L2",
     "timestamp": "2024-4-21 17:30:50"
-     },
+  },
   {
     "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
     "_to": "0xF966fED9CB35471A1025815384e973C87eE0eA4D",
@@ -163,5 +163,71 @@
     "_messageHash": "0x6f9102cc50f25f5d64476abb84e240d58c6ecb2bd3fc5b43f0b3cb47ce2fe759",
     "direction": "L1 -> L2",
     "timestamp": "2024-4-21 17:50:40"
+  },
+  {
+    "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
+    "_to": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
+    "_fee": "0.01",
+    "_value": "0.011",
+    "_nonce": "1438",
+    "_calldata": "0xcf88871b",
+    "_messageHash": "0x6c3664c2ca7a310aa4c07c1ab615e0cde10fc5fb99b5f915f07becf158563f9a",
+    "direction": "L1 -> L2",
+    "timestamp": "2024-4-21 18:10:26"
+  },
+  {
+    "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
+    "_to": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
+    "_fee": "0.01",
+    "_value": "0.011",
+    "_nonce": "1439",
+    "_calldata": "0xcf88871b",
+    "_messageHash": "0x5635338728b2c58b9c80688f0b080ea4af14901dbb75373268dacbf85817e897",
+    "direction": "L1 -> L2",
+    "timestamp": "2024-4-21 18:11:3"
+  },
+  {
+    "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
+    "_to": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
+    "_fee": "0.01",
+    "_value": "0.011",
+    "_nonce": "1440",
+    "_calldata": "0xcf88871b",
+    "_messageHash": "0x973334b9733f1f216ac1036753a9d0947c517bdb2912c368f0d63f07da49b422",
+    "direction": "L1 -> L2",
+    "timestamp": "2024-4-21 18:11:40"
+  },
+  {
+    "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
+    "_to": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
+    "_fee": "0.01",
+    "_value": "0.011",
+    "_nonce": "1441",
+    "_calldata": "0xcf88871b",
+    "_messageHash": "0xfb93b55e4b115ffe0f35d66ab81e0be19f6868cac58a3db600747125196e9ac4",
+    "direction": "L1 -> L2",
+    "timestamp": "2024-4-21 18:25:17"
+  },
+  {
+    "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
+    "_to": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
+    "_fee": "0.01",
+    "_value": "0.011",
+    "_nonce": "1442",
+    "_calldata": "0xcf88871b",
+    "_messageHash": "0x4024cfeb70ac3df4fb3a907baec0b3e396901833f5087c5078c5c9f0591f33c2",
+    "direction": "L1 -> L2",
+    "timestamp": "2024-4-21 18:26:14"
+  },
+  {
+    "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
+    "_to": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
+    "_fee": "0.0001",
+    "_value": "0.00011",
+    "_nonce": "1443",
+    "_calldata": "0xcf88871b",
+    "_messageHash": "0xeebe1c69dc1b4d6cbb655baab21dffbcb0850f91496c5ae6334655a49e0dbd2b",
+    "direction": "L1 -> L2",
+    "timestamp": "2024-4-21 18:26:37"
   }
 ]

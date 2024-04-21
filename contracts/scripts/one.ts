@@ -13,8 +13,8 @@ const lineaFeeCollector = '0x362b7eC38BadB9539e8ceDE816a07040d690568F'
 
 async function main() {
     // connect to the contracts on sepolia nad linea sepolia
-    const mainnet = '0xE95F71071C7BDA7C2550a4329D986aB6465c8772'
-    const linea = '0xF966fED9CB35471A1025815384e973C87eE0eA4D'
+    const mainnet = '0x6169fdBcd32F680539db24e6b2aa8CAfD3D4799F'
+    const linea = '0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0'
 
     const mainnetProvider = new ethers.JsonRpcProvider(`https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`)
     const mainnetSigner = new ethers.Wallet(process.env.SEPOLIA_PRIVATE_KEY as string, mainnetProvider)
@@ -146,8 +146,8 @@ async function main() {
     // similar but from L1 -> L2
     const mainnetMessageServiceContract = new ethers.Contract(mainnetMessageService, IMessageServiceJSON.abi, mainnetSigner)
     {
-        const fee = ethers.parseEther("0.01")
-        const extraFee = ethers.parseEther("0.011")
+        const fee = ethers.parseEther("0.0001")
+        const extraFee = ethers.parseEther("0.00011")
         const calldata = lineaContract.interface.encodeFunctionData("incrementMeaninglessCounter")
 
         console.log("calldata", calldata)

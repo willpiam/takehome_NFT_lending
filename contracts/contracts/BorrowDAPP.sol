@@ -123,7 +123,7 @@ contract BorrowDAPP {
         otherSide = IBorrowDAPP(_otherSide);
     }
 
-    function incrementMeaninglessCounter() public {
+    function incrementMeaninglessCounter() public payable {
         meaninglessCounter++;
         emit CounterIncremented(msg.sender);
     }

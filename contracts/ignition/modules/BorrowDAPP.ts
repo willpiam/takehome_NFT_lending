@@ -10,8 +10,8 @@ const networkToCanonicalMessageService: any = {
 }
 
 const networkToLatestDeployment: any = {
-    "sepolia": "0xE95F71071C7BDA7C2550a4329D986aB6465c8772",
-    "linea_sepolia": "0xF966fED9CB35471A1025815384e973C87eE0eA4D",
+    "sepolia": "0x6169fdBcd32F680539db24e6b2aa8CAfD3D4799F",
+    "linea_sepolia": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
     "ethereum": ethers.ZeroAddress,
     "linea": ethers.ZeroAddress,
 }
