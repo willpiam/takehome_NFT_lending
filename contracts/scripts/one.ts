@@ -2,6 +2,7 @@ import { ethers } from "hardhat"
 import dotenv from 'dotenv';
 import BorrowDAPPJSON from "../artifacts/contracts/BorrowDAPP.sol/BorrowDAPP.json";
 import IMessageServiceJSON from "../artifacts/contracts/BorrowDAPP.sol/IMessageService.json";
+import { addRecord } from "./maintainRecords";
 
 dotenv.config();
 
@@ -54,8 +55,9 @@ async function main() {
 
     // connect directly to the linea message service and use it to call something on the mainnet contract
     const lineaMessageServiceContract = new ethers.Contract(lineaMessageService, IMessageServiceJSON.abi, lineaSigner)
-    {
+    if (false) {
         const fee = ethers.parseEther("0.001")
+        const extraFee = ethers.parseEther("0.0011")
         const calldata = mainnetContract.interface.encodeFunctionData("incrementMeaninglessCounter")
         console.log("calldata", calldata)
         const response = await lineaMessageServiceContract.sendMessage(
@@ -63,21 +65,21 @@ async function main() {
             fee,
             mainnetContract.interface.encodeFunctionData("incrementMeaninglessCounter"),
             {
-                value: 0n + fee
+                value: extraFee + fee
             });
-        console.log("response", response)
+        // console.log("response", response)
 
         const receipt = await response.wait()
-        console.log("receipt", receipt)
+        // console.log("receipt", receipt)
 
         // get the MessageSent event
         const events = await lineaMessageServiceContract.queryFilter(lineaMessageServiceContract.filters.MessageSent(), receipt.blockNumber)
         if (1 !== events.length)
             console.log(`${'-'.repeat(20)}\nWARNING! Multiple events found. Current code cannot handle this properly\n${'-'.repeat(20)}`)
 
-        const event : any = events[0] // this will do for now but eventually MUST be replaced with logic to ensure we pick the correct event from the list
-        console.log("event (json)", JSON.stringify(event, null, 2))
-        console.log("event (object)", event)
+        const event: any = events[0] // this will do for now but eventually MUST be replaced with logic to ensure we pick the correct event from the list
+        // console.log("event (json)", JSON.stringify(event, null, 2))
+        // console.log("event (object)", event)
 
         const eventObj = {
             _from: event.args._from,
@@ -89,7 +91,16 @@ async function main() {
             _messageHash: event.args._messageHash,
         }
 
+        await addRecord({
+            ...eventObj,
+            _fee: ethers.formatEther(eventObj._fee),
+            _value: ethers.formatEther(eventObj._value),
+            direction: "L2 -> L1"
+        })
+
         console.log("eventObj", eventObj)
+
+        // check that 
 
         // wait some time
         const delay = 30 // seconds
@@ -97,7 +108,7 @@ async function main() {
         await new Promise(resolve => setTimeout(resolve, delay * 1000))
         console.log("done waiting")
 
-        {// check inboxL2L1MessageStatus[messageHash] (0: unknown, 1: sent, 2: received)
+        {// check inboxL2L1MessageStatus[messageHash] (0: unknown, 1: received)
             const abi = [
                 "function inboxL2L1MessageStatus(bytes32 messageHash) view returns (uint256)"
             ]
@@ -107,7 +118,7 @@ async function main() {
 
             if ('0' === status.toString()) {
                 console.log("Mainnet has not seen this message hash. Returning early as the issue has already occured")
-                return 
+                return
             }
         }
 
@@ -131,6 +142,64 @@ async function main() {
         console.log("claimReceipt", claimReceipt)
 
     }
+
+    // similar but from L1 -> L2
+    const mainnetMessageServiceContract = new ethers.Contract(mainnetMessageService, IMessageServiceJSON.abi, mainnetSigner)
+    {
+        const fee = ethers.parseEther("0.01")
+        const extraFee = ethers.parseEther("0.011")
+        const calldata = lineaContract.interface.encodeFunctionData("incrementMeaninglessCounter")
+
+        console.log("calldata", calldata)
+        const response = await mainnetMessageServiceContract.sendMessage(
+            linea,
+            fee,
+            calldata,
+            {
+                value: extraFee + fee
+            });
+
+        console.log("response", response)
+
+        const receipt = await response.wait()
+
+        console.log("receipt", receipt)
+
+        const events = await mainnetMessageServiceContract.queryFilter(mainnetMessageServiceContract.filters.MessageSent(), receipt.blockNumber)
+
+        console.log("events", events)
+
+        if (1 !== events.length)
+            console.log(`${'-'.repeat(20)}\nWARNING! Multiple events found. Current code cannot handle this properly\n${'-'.repeat(20)}`)
+
+        const event: any = events[0] // this will do for now but eventually MUST be replaced with logic to ensure we pick the correct event from the list
+        // console.log("event (json)", JSON.stringify(event, null, 2))
+        // console.log("event (object)", event)
+
+        const eventObj = {
+            _from: event.args._from,
+            _to: event.args._to,
+            _fee: event.args._fee,
+            _value: event.args._value,
+            _nonce: event.args._nonce,
+            _calldata: event.args._calldata,
+            _messageHash: event.args._messageHash,
+        }
+
+        await addRecord({
+            ...eventObj,
+            _fee: ethers.formatEther(eventObj._fee),
+            _value: ethers.formatEther(eventObj._value),
+            direction: "L1 -> L2"
+        })
+
+        console.log("eventObj", eventObj)
+
+
+
+    }
+
+
 
 
 
