@@ -23,6 +23,20 @@ const networkToCounterpart : any = {
     "linea": "ethereum",
 }
 
+const networkToDollarAddress: any = {
+    "sepolia": `0x19E4B6e93353fA905c038E2D44344cA135fC6ada`,
+    "linea_sepolia": `0xd9369fAbB632962F1Bd4B32C065854A1eB5682A6`,
+    "ethereum": ethers.ZeroAddress,
+    "linea": ethers.ZeroAddress,
+}
+
+const networkToApprovedNFTs: any = {
+    "sepolia": ['0xed462de62fEAD82ebB1df9fa58C93c8043255D23', '0x809B5dE33ACBbf469954e04091943BEE2c7ef4E2'],
+    "linea_sepolia": ['0x2Ae35144e35a3c0b77ae7104e4CE1c9ef2857e8e', '0xd4316420646663942b459B49d9eBC4c16Dd67a13'],
+    "ethereum": [],
+    "linea": [],
+}
+
 const BorrowDAPPModule = buildModule("BorrowDAPPModule", (m) => {
     // what network are we deploying to? 
     const network = hre.network.name;
@@ -32,10 +46,11 @@ const BorrowDAPPModule = buildModule("BorrowDAPPModule", (m) => {
         throw new Error(`Unsupported network ${network}`);
 
     const canonicalMessageService = networkToCanonicalMessageService[network];
-
     const otherSide = networkToLatestDeployment[networkToCounterpart[network]];
+    const dollar = networkToDollarAddress[network];
+    const approvedNFTs = networkToApprovedNFTs[network];
 
-    const borrowDAPP = m.contract("BorrowDAPP", [canonicalMessageService, otherSide], {});
+    const borrowDAPP = m.contract("BorrowDAPP", [canonicalMessageService, otherSide, dollar, approvedNFTs], {});
     const settings = hre.config.solidity;
     console.log("soldity settings", JSON.stringify(settings, null, 2));
     return { borrowDAPP };

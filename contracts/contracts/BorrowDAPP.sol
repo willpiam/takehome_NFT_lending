@@ -1,11 +1,38 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
+interface IERC20 {
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 value) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
+    function approve(address spender, uint256 value) external returns (bool);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function mint(address to, uint256 amount) external;
+}
+
+/**
+ * @dev Required interface of an ERC721 compliant contract.
+ */
+interface IERC721 {
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    function balanceOf(address owner) external view returns (uint256 balance);
+    function ownerOf(uint256 tokenId) external view returns (address owner);
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+    function transferFrom(address from, address to, uint256 tokenId) external;
+    function approve(address to, uint256 tokenId) external;
+    function setApprovalForAll(address operator, bool approved) external;
+    function getApproved(uint256 tokenId) external view returns (address operator);
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+}
+
+
 interface IMessageService {
-  /**
-   * @dev Emitted when a message is sent.
-   * @dev We include the message hash to save hashing costs on the rollup.
-   */
   event MessageSent(
     address indexed _from,
     address indexed _to,
@@ -15,58 +42,13 @@ interface IMessageService {
     bytes _calldata,
     bytes32 indexed _messageHash
   );
-
-  /**
-   * @dev Emitted when a message is claimed.
-   */
   event MessageClaimed(bytes32 indexed _messageHash);
-
-  /**
-   * @dev Thrown when fees are lower than the minimum fee.
-   */
   error FeeTooLow();
-
-  /**
-   * @dev Thrown when fees are lower than value.
-   */
   error ValueShouldBeGreaterThanFee();
-
-  /**
-   * @dev Thrown when the value sent is less than the fee.
-   * @dev Value to forward on is msg.value - _fee.
-   */
   error ValueSentTooLow();
-
-  /**
-   * @dev Thrown when the destination address reverts.
-   */
   error MessageSendingFailed(address destination);
-
-  /**
-   * @dev Thrown when the destination address reverts.
-   */
   error FeePaymentFailed(address recipient);
-
-  /**
-   * @notice Sends a message for transporting from the given chain.
-   * @dev This function should be called with a msg.value = _value + _fee. The fee will be paid on the destination chain.
-   * @param _to The destination address on the destination chain.
-   * @param _fee The message service fee on the origin chain.
-   * @param _calldata The calldata used by the destination message service to call the destination contract.
-   */
   function sendMessage(address _to, uint256 _fee, bytes calldata _calldata) external payable;
-
-  /**
-   * @notice Deliver a message to the destination chain.
-   * @notice Is called automatically by the Postman, dApp or end user.
-   * @param _from The msg.sender calling the origin message service.
-   * @param _to The destination address on the destination chain.
-   * @param _value The value to be transferred to the destination address.
-   * @param _fee The message service fee on the origin chain.
-   * @param _feeRecipient Address that will receive the fees.
-   * @param _calldata The calldata used by the destination message service to call/forward to the destination contract.
-   * @param _nonce Unique message number.
-   */
   function claimMessage(
     address _from,
     address _to,
@@ -76,11 +58,6 @@ interface IMessageService {
     bytes calldata _calldata,
     uint256 _nonce
   ) external;
-
-  /**
-   * @notice Returns the original sender of the message on the origin layer.
-   * @return The original sender of the message on the origin layer.
-   */
   function sender() external view returns (address);
 }
 
@@ -93,7 +70,6 @@ function tokenUUID (NFT memory _nft) pure returns (bytes32) {
     return keccak256(abi.encodePacked(_nft.nftAddress, _nft.tokenId));
 }
 
-// todo: add erc1155 token... id: 0 represents ownership of this contract (NFT), id: 1 represents shares of the liquidity pool)
 interface IBorrowDAPP {
     function incrementMeaninglessCounter() external;
     function incrementOnOtherSide() external;
@@ -106,17 +82,23 @@ contract BorrowDAPP {
     uint256 public meaninglessCounter = 0;
     IMessageService public canonicalMessageService;
     IBorrowDAPP public otherSide;
+    IERC20 public dollars;
     
     mapping(address => bool) approvedNftContracts;
+    mapping(bytes32 => address) public nftOwners; // tokenUUID -> owner
+    mapping(bytes32 => uint256) public nftValues; // tokenUUID -> value .. the value the user has been credited for locking thier token
 
     event CounterIncremented(address indexed caller);
-    event NftDeposited();
+    event NftDeposited(address indexed nftAddress, uint256 indexed tokenId, bytes32 indexed tokenUUID);
     event LoanGranted();
     event LoanDenied();
 
-    constructor(address _messageService, address _otherSide) {
+    constructor(address _messageService, address _otherSide, address _dollars, address[] memory _approvedNftContracts) {
         canonicalMessageService = IMessageService(_messageService);
         otherSide = IBorrowDAPP(_otherSide);
+        dollars = IERC20(_dollars);
+        dollars.mint(address(this), 100_000_000 ether); // proto type... this is fine
+        approveNftContracts(_approvedNftContracts);
     }
 
     function setOtherSide(address _otherSide) public {
@@ -133,11 +115,13 @@ contract BorrowDAPP {
             .sendMessage(address(otherSide), 0, abi.encodeWithSignature("incrementMeaninglessCounter()"));
     }
 
-    function approveNftContract(address _nftContract) public {
-        approvedNftContracts[_nftContract] = true;
+    function approveNftContracts(address[] memory _nftContract) public {
+        for (uint256 i = 0; i < _nftContract.length; i++) {
+            approvedNftContracts[_nftContract[i]] = true;
+        }
     }
 
-    function depositNFT(address _nftAddress, uint256 _tokenId) public {
+    function depositNFT(address _nftAddress, uint256 _tokenId) public payable {
         /* 
         Get value of NFT from oracle or exchange
             | cannot get value   -> reject
@@ -149,34 +133,28 @@ contract BorrowDAPP {
         Record that the NFT is owned by the depositor
         Emit event
         */
+        require(approvedNftContracts[_nftAddress], "NFT contract not approved");
+        
+        // transfer the NFT to this contract
+        IERC721(_nftAddress).transferFrom(msg.sender, address(this), _tokenId);
+
+        // record that the NFT is owned by the depositor
+        bytes32 _tokenUUID = tokenUUID(NFT(_nftAddress, _tokenId));
+        nftOwners[_tokenUUID] = msg.sender;
+
+        // credit the user with some fraction of the value of their deposited NFT
+        // to make this PoC simple we will credit everyone with 5 dollars
+        nftValues[_tokenUUID] = 5;
+
+        // send a message to the other side of the bridge just saying that the user is credited with 5 dollars
+        canonicalMessageService
+            .sendMessage{value: msg.value}(address(otherSide), msg.value/2, abi.encodeWithSignature("claimCredit(address,uint256)", msg.sender, 5));
+
+        emit NftDeposited(_nftAddress, _tokenId, _tokenUUID);
     }
 
-    function _grantLoan(uint256 amount) private {
-        /*
-        Lock ALL NFTs deposited by the borrower
-        Transfer amount of ETH to borrower
-        Record that the borrower owes the amount of ETH
-        Emit event
-        */
-    }
-
-    function _denyLoan() private {
-        /*
-        Emit event
-        */
-    }
-
-    function borrowEth (uint256 amountRequested) public {
-        /*
-            LOOP over each deposited NFT
-                check value of NFT
-                if value of tokens seen > (N * amountRequested)
-                    _grantLoan(amountRequested)
-                    exit
-                else
-                    continue
-            END LOOP
-            _denyLoan()
-        */
+    function claimCredit(address borrower, uint256 credit) public payable {
+        // transfer 5 dollars to the borrower
+        dollars.transfer(borrower, credit);
     }
 }

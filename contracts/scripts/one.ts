@@ -146,8 +146,8 @@ async function main() {
     // similar but from L1 -> L2
     const mainnetMessageServiceContract = new ethers.Contract(mainnetMessageService, IMessageServiceJSON.abi, mainnetSigner)
     {
-        const fee = ethers.parseEther("0.0001")
-        const extraFee = ethers.parseEther("0.00011")
+        const fee = ethers.parseEther("0.00001")
+        const extraFee = ethers.parseEther("0.000011")
         const calldata = lineaContract.interface.encodeFunctionData("incrementMeaninglessCounter")
 
         console.log("calldata", calldata)
