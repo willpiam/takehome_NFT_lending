@@ -124,17 +124,6 @@ contract BorrowDAPP {
     }
 
     function depositNFT(address _nftAddress, uint256 _tokenId) public payable {
-        /* 
-        Get value of NFT from oracle or exchange
-            | cannot get value   -> reject
-            | otherwise          -> continue
-        Check we have permission to move the NFT
-            | no permission      -> reject
-            | otherwise          -> continue
-        Transfer NFT to contract
-        Record that the NFT is owned by the depositor
-        Emit event
-        */
         require(approvedNftContracts[_nftAddress], "NFT contract not approved");
         
         // transfer the NFT to this contract

@@ -153,5 +153,29 @@
     "direction": "L1 -> L2",
     "description": "depositing NFT on L1 for cash on L2",
     "timestamp": "2024-4-21 21:7:1"
+  },
+  {
+    "_from": "0xb9de884375757E8bd1b138Cf3F1d2fA3bbf3f803",
+    "_to": "0x3e5B70c8Ed4D1a406B58025E876804c1EcE69545",
+    "_fee": "0.00001",
+    "_value": "0.000011",
+    "_nonce": "1483",
+    "_calldata": "0xcf88871b",
+    "_messageHash": "0x56af9b63fcdd4d6b260f947f074a3fb61372f5af20145b72bd898463845b0efe",
+    "direction": "L1 -> L2",
+    "description": "increment meaningless counter",
+    "timestamp": "2024-4-21 21:30:51"
+  },
+  {
+    "_from": "0x82fB0db9945b9A1D2362f6Ae1635A8eB7b38c5D3",
+    "_to": "0x3e5B70c8Ed4D1a406B58025E876804c1EcE69545",
+    "_fee": "0.00001",
+    "_value": "0.00001",
+    "_nonce": "1484",
+    "_calldata": "0x4feee8d6000000000000000000000000b9de884375757e8bd1b138cf3f1d2fa3bbf3f8030000000000000000000000000000000000000000000000004563918244f40000",
+    "_messageHash": "0x67640655dcbea49f395d1fd7f23a47b38bee6ed72621d363eabb3e79e6a01ccd",
+    "direction": "L1 -> L2",
+    "description": "depositing NFT on L1 for cash on L2",
+    "timestamp": "2024-4-21 21:31:28"
   }
 ]

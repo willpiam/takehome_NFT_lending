@@ -4,18 +4,15 @@ import BorrowDAPPJSON from "../artifacts/contracts/BorrowDAPP.sol/BorrowDAPP.jso
 import IMessageServiceJSON from "../artifacts/contracts/BorrowDAPP.sol/IMessageService.json";
 import IERC721JSON from "../artifacts/contracts/BorrowDAPP.sol/IERC721.json";
 import { addRecord } from "./maintainRecords";
-import {mainnet, linea} from "./addresses";
+import { mainnet, linea } from "./addresses";
 
 dotenv.config();
 
 const mainnetMessageService = '0xB218f8A4Bc926cF1cA7b3423c154a0D627Bdb7E5'
 const lineaMessageService = '0x971e727e956690b9957be6d51Ec16E73AcAC83A7'
 
-const lineaFeeCollector = '0x362b7eC38BadB9539e8ceDE816a07040d690568F'
-
 async function main() {
-    // connect to the contracts on sepolia nad linea sepolia
-
+    // connect to the contracts on sepolia and linea sepolia
     const mainnetProvider = new ethers.JsonRpcProvider(`https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`)
     const mainnetSigner = new ethers.Wallet(process.env.SEPOLIA_PRIVATE_KEY as string, mainnetProvider)
     const mainnetContract = new ethers.Contract(mainnet, BorrowDAPPJSON.abi, mainnetSigner)
@@ -27,7 +24,6 @@ async function main() {
     const lineaContract = new ethers.Contract(linea, BorrowDAPPJSON.abi, lineaSigner)
 
     console.log(`L2 balance ${lineaSigner.address} ...... ${ethers.formatEther(await lineaProvider.getBalance(lineaSigner.address))}`)
-
 
     { // ensure everything is connected correctly
         if (mainnetMessageService !== await mainnetContract.canonicalMessageService())
@@ -53,128 +49,28 @@ async function main() {
     const initalLineaCounterValue = await lineaContract.meaninglessCounter()
     console.log("initalLineaCounterValue", initalLineaCounterValue.toString())
 
-    // connect directly to the linea message service and use it to call something on the mainnet contract
-    const lineaMessageServiceContract = new ethers.Contract(lineaMessageService, IMessageServiceJSON.abi, lineaSigner)
-    if (false) {
-        const fee = ethers.parseEther("0.001")
-        const extraFee = ethers.parseEther("0.0011")
-        const calldata = mainnetContract.interface.encodeFunctionData("incrementMeaninglessCounter")
-        console.log("calldata", calldata)
-        const response = await lineaMessageServiceContract.sendMessage(
-            mainnet,
-            fee,
-            mainnetContract.interface.encodeFunctionData("incrementMeaninglessCounter"),
-            {
-                value: extraFee + fee
-            });
-        // console.log("response", response)
-
-        const receipt = await response.wait()
-        // console.log("receipt", receipt)
-
-        // get the MessageSent event
-        const events = await lineaMessageServiceContract.queryFilter(lineaMessageServiceContract.filters.MessageSent(), receipt.blockNumber)
-        if (1 !== events.length)
-            console.log(`${'-'.repeat(20)}\nWARNING! Multiple events found. Current code cannot handle this properly\n${'-'.repeat(20)}`)
-
-        const event: any = events[0] // this will do for now but eventually MUST be replaced with logic to ensure we pick the correct event from the list
-        // console.log("event (json)", JSON.stringify(event, null, 2))
-        // console.log("event (object)", event)
-
-        const eventObj = {
-            _from: event.args._from,
-            _to: event.args._to,
-            _fee: event.args._fee,
-            _value: event.args._value,
-            _nonce: event.args._nonce,
-            _calldata: event.args._calldata,
-            _messageHash: event.args._messageHash,
-        }
-
-        await addRecord({
-            ...eventObj,
-            _fee: ethers.formatEther(eventObj._fee),
-            _value: ethers.formatEther(eventObj._value),
-            direction: "L2 -> L1"
-        })
-
-        console.log("eventObj", eventObj)
-
-        // check that 
-
-        // wait some time
-        const delay = 30 // seconds
-        console.log(`waiting ${delay} seconds`)
-        await new Promise(resolve => setTimeout(resolve, delay * 1000))
-        console.log("done waiting")
-
-        {// check inboxL2L1MessageStatus[messageHash] (0: unknown, 1: received)
-            const abi = [
-                "function inboxL2L1MessageStatus(bytes32 messageHash) view returns (uint256)"
-            ]
-            const contract = new ethers.Contract(mainnetMessageService, abi, mainnetSigner)
-            const status = await contract.inboxL2L1MessageStatus(eventObj._messageHash)
-            console.log("message status on mainnet", status.toString())
-
-            if ('0' === status.toString()) {
-                console.log("Mainnet has not seen this message hash. Returning early as the issue has already occured")
-                return
-            }
-        }
-
-
-        const mainnetMessageServiceContract = new ethers.Contract(mainnetMessageService, IMessageServiceJSON.abi, mainnetSigner)
-        // on the other side we need to claim the message
-        const claimResponse = await mainnetMessageServiceContract.claimMessage(
-            eventObj._from,
-            eventObj._to,
-            eventObj._fee,
-            eventObj._value,
-            ethers.ZeroAddress, // fee recipient - if zero fees go to msg.sender
-            eventObj._calldata,
-            eventObj._nonce,
-        );
-
-        console.log("claimResponse", claimResponse)
-
-        const claimReceipt = await claimResponse.wait()
-
-        console.log("claimReceipt", claimReceipt)
-
-    }
-
     // similar but from L1 -> L2
     const mainnetMessageServiceContract = new ethers.Contract(mainnetMessageService, IMessageServiceJSON.abi, mainnetSigner)
     {
         const fee = ethers.parseEther("0.00001")
         const extraFee = ethers.parseEther("0.000011")
+        
         const calldata = lineaContract.interface.encodeFunctionData("incrementMeaninglessCounter")
-
         console.log("calldata", calldata)
-        const response = await mainnetMessageServiceContract.sendMessage(
-            linea,
-            fee,
-            calldata,
-            {
-                value: extraFee + fee
-            });
 
+        const response = await mainnetMessageServiceContract.sendMessage(linea, fee, calldata, { value: extraFee + fee });
         console.log("response", response)
 
         const receipt = await response.wait()
-
         console.log("receipt", receipt)
 
         const events = await mainnetMessageServiceContract.queryFilter(mainnetMessageServiceContract.filters.MessageSent(), receipt.blockNumber)
-
         console.log("events", events)
 
         if (1 !== events.length)
             console.log(`${'-'.repeat(20)}\nWARNING! Multiple events found. Current code cannot handle this properly\n${'-'.repeat(20)}`)
 
         const event: any = events[0] // this will do for now but eventually MUST be replaced with logic to ensure we pick the correct event from the list
-        // console.log("event (json)", JSON.stringify(event, null, 2))
-        // console.log("event (object)", event)
 
         const eventObj = {
             _from: event.args._from,
@@ -204,18 +100,18 @@ async function main() {
 
         const result = await nftContract.safeMint(mainnetSigner.address)
         console.log("Minting NFT...")
-        const receipt = await result.wait()
+        await result.wait()
 
         // approve the borrowDAPP contract to take the NFT
         const alreadyApproved = await nftContract.isApprovedForAll(mainnetSigner.address, mainnet)
         if (false === alreadyApproved) {
             const result2 = await nftContract.setApprovalForAll(mainnet, true);
             console.log("Approving borrowDAPP to take NFT...")
-            const receipt2 = await result2.wait()
+            await result2.wait()
         }
 
         const result3 = await mainnetContract.depositNFT(await nftContract.getAddress(), nextTokenId, {
-            value: ethers.parseEther("0.00001") * 2n 
+            value: ethers.parseEther("0.00001") * 2n
         })
         console.log("depositing NFT on L1...");
         const receipt3 = await result3.wait()
@@ -242,16 +138,6 @@ async function main() {
             direction: "L1 -> L2",
             description: "depositing NFT on L1 for cash on L2"
         })
-
-
-
     }
-
-
-
-
-
-
-
 }
 main()
