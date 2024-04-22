@@ -29,7 +29,7 @@ You may need to delete ignition/deployments/chain-<something>
 
 ## scripts
 
-### one.ts
+### experiment.ts
 
 This script demonstrates calling a function from a contract deployed on another network.
 
