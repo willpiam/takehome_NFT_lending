@@ -15,3 +15,7 @@ initialtes two cross chain actions, both from L1 to L2. The first is a simple ca
 
 #### contracts/scripts/processMessages.ts 
 using the commit provided by the postman use the Message service to post and call the calldata
+
+## What this does
+
+This project demonstrates the basic functionality of a cross chain lending platform. Users can lock an approved NFT on L1 and receive a loan on L2. Because this is a proof of concept the loan is always 5 "dollars". There is currently no way to repay the loan or unlock the NFT. The point of this is to demonstrate the very basic functionality of "Lock ERC721 on L1, receive ERC20 on L2".
