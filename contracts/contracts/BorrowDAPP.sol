@@ -29,6 +29,8 @@ interface IERC721 {
     function setApprovalForAll(address operator, bool approved) external;
     function getApproved(uint256 tokenId) external view returns (address operator);
     function isApprovedForAll(address owner, address operator) external view returns (bool);
+    function nextTokenId() external view returns (uint256);
+    function safeMint(address to) external;
 }
 
 
@@ -144,11 +146,11 @@ contract BorrowDAPP {
 
         // credit the user with some fraction of the value of their deposited NFT
         // to make this PoC simple we will credit everyone with 5 dollars
-        nftValues[_tokenUUID] = 5;
+        nftValues[_tokenUUID] = 5 ether;
 
         // send a message to the other side of the bridge just saying that the user is credited with 5 dollars
         canonicalMessageService
-            .sendMessage{value: msg.value}(address(otherSide), msg.value/2, abi.encodeWithSignature("claimCredit(address,uint256)", msg.sender, 5));
+            .sendMessage{value: msg.value}(address(otherSide), msg.value/2, abi.encodeWithSignature("claimCredit(address,uint256)", msg.sender, nftValues[_tokenUUID]));
 
         emit NftDeposited(_nftAddress, _tokenId, _tokenUUID);
     }

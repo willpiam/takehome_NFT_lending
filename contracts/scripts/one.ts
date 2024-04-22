@@ -2,7 +2,9 @@ import { ethers } from "hardhat"
 import dotenv from 'dotenv';
 import BorrowDAPPJSON from "../artifacts/contracts/BorrowDAPP.sol/BorrowDAPP.json";
 import IMessageServiceJSON from "../artifacts/contracts/BorrowDAPP.sol/IMessageService.json";
+import IERC721JSON from "../artifacts/contracts/BorrowDAPP.sol/IERC721.json";
 import { addRecord } from "./maintainRecords";
+import {mainnet, linea} from "./addresses";
 
 dotenv.config();
 
@@ -13,8 +15,6 @@ const lineaFeeCollector = '0x362b7eC38BadB9539e8ceDE816a07040d690568F'
 
 async function main() {
     // connect to the contracts on sepolia nad linea sepolia
-    const mainnet = '0x6169fdBcd32F680539db24e6b2aa8CAfD3D4799F'
-    const linea = '0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0'
 
     const mainnetProvider = new ethers.JsonRpcProvider(`https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`)
     const mainnetSigner = new ethers.Wallet(process.env.SEPOLIA_PRIVATE_KEY as string, mainnetProvider)
@@ -190,10 +190,58 @@ async function main() {
             ...eventObj,
             _fee: ethers.formatEther(eventObj._fee),
             _value: ethers.formatEther(eventObj._value),
-            direction: "L1 -> L2"
+            direction: "L1 -> L2",
+            description: "increment meaningless counter"
         })
 
         console.log("eventObj", eventObj)
+    }
+
+    { // Deposit an NFT on L1 --> get cash on L2
+        const nftContract = new ethers.Contract('0xed462de62fEAD82ebB1df9fa58C93c8043255D23', IERC721JSON.abi, mainnetSigner)
+        const nextTokenId = await nftContract.nextTokenId()
+        console.log("nextTokenId", nextTokenId.toString())
+
+        const result = await nftContract.safeMint(mainnetSigner.address)
+        console.log("Minting NFT...")
+        const receipt = await result.wait()
+
+        // approve the borrowDAPP contract to take the NFT
+        const alreadyApproved = await nftContract.isApprovedForAll(mainnetSigner.address, mainnet)
+        if (false === alreadyApproved) {
+            const result2 = await nftContract.setApprovalForAll(mainnet, true);
+            console.log("Approving borrowDAPP to take NFT...")
+            const receipt2 = await result2.wait()
+        }
+
+        const result3 = await mainnetContract.depositNFT(await nftContract.getAddress(), nextTokenId, {
+            value: ethers.parseEther("0.00001") * 2n 
+        })
+        console.log("depositing NFT on L1...");
+        const receipt3 = await result3.wait()
+
+        // get any "MessageSent" events
+        const events = await mainnetMessageServiceContract.queryFilter(mainnetMessageServiceContract.filters.MessageSent(), receipt3.blockNumber)
+        console.log("events", events)
+
+        const event: any = events[0]
+        const eventObj = {
+            _from: event.args._from,
+            _to: event.args._to,
+            _fee: event.args._fee,
+            _value: event.args._value,
+            _nonce: event.args._nonce,
+            _calldata: event.args._calldata,
+            _messageHash: event.args._messageHash,
+        }
+
+        await addRecord({
+            ...eventObj,
+            _fee: ethers.formatEther(eventObj._fee),
+            _value: ethers.formatEther(eventObj._value),
+            direction: "L1 -> L2",
+            description: "depositing NFT on L1 for cash on L2"
+        })
 
 
 

@@ -11,9 +11,6 @@ const lineaMessageService = '0x971e727e956690b9957be6d51Ec16E73AcAC83A7'
 const lineaProvider = new ethers.JsonRpcProvider(`https://linea-sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`)
 const lineaSigner = new ethers.Wallet(process.env.LINEA_SEPOLIA_PRIVATE_KEY as string, lineaProvider)
 
-const mainnet = '0x6169fdBcd32F680539db24e6b2aa8CAfD3D4799F'
-const linea = '0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0'
-
 const processMessages = async () => {
   const filename = 'records.json';
   const data = await fs.readFile(filename, { encoding: 'utf8' });

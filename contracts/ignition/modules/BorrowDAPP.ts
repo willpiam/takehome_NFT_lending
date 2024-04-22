@@ -1,6 +1,7 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 import hre from "hardhat";
 import { ethers } from "hardhat";
+import { mainnet, linea } from "../../scripts/addresses";
 
 const networkToCanonicalMessageService: any = {
     "sepolia": "0xB218f8A4Bc926cF1cA7b3423c154a0D627Bdb7E5",
@@ -10,8 +11,8 @@ const networkToCanonicalMessageService: any = {
 }
 
 const networkToLatestDeployment: any = {
-    "sepolia": "0x6169fdBcd32F680539db24e6b2aa8CAfD3D4799F",
-    "linea_sepolia": "0x41Ba2D6520Ed895BC956cfD5fd445dD3cAE5d5f0",
+    "sepolia": mainnet,
+    "linea_sepolia": linea,
     "ethereum": ethers.ZeroAddress,
     "linea": ethers.ZeroAddress,
 }
